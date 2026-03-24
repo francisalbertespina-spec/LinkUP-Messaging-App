@@ -58,6 +58,10 @@ function randomInviteCode() {
   return Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
+ async function markChatAsRead(userId, chatId) {
+    await updateDoc(doc(db, "users", userId), { [`lastSeen.${chatId}`]: serverTimestamp()});
+  }
+
 // ─── Username Setup Screen ────────────────────────────────────────────────────
 // Shown once after first Google sign-in to set a @username
 function UsernameSetup({ user, onComplete }) {
@@ -884,7 +888,7 @@ function JoinGroupModal({ user, onClose, onJoined }) {
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 function Sidebar({ user, userProfile, users, groups, activeChat, setActiveChat, dmUnreads,
                    globalUnread, mobileOpen, setMobileOpen, onCreateGroup, onJoinGroup,
-                   onOpenProfile }) {
+                   onOpenProfile, groupUnreads }) {
   const [search, setSearch] = useState("");
   const filtered = users.filter(u =>
     u.uid !== user.uid && (
@@ -965,6 +969,11 @@ function Sidebar({ user, userProfile, users, groups, activeChat, setActiveChat, 
                 <p className="text-sm font-medium text-slate-200 truncate">{g.name}</p>
                 <p className="text-[11px] text-slate-600">{Object.keys(g.members || {}).length} members</p>
               </div>
+              {groupUnreads[g.id] > 0 && (
+                <span className="min-w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+                  {groupUnreads[g.id] > 9 ? "9+" : groupUnreads[g.id]}
+                </span>
+              )}
             </button>
           );
         })}
@@ -1023,6 +1032,8 @@ function ChatApp({ user, userProfile, onProfileUpdated }) {
   const [showJoinGroup, setShowJoinGroup] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showGroupMembers, setShowGroupMembers] = useState(false);
+  const [lastSeenMap, setLastSeenMap] = useState({});
+  const [groupUnreads, setGroupUnreads] = useState({});
   const prevChatRef = useRef(activeChat);
   const alias = generateAlias(user.uid);
   const anonColor = generateAnonColor(user.uid);
@@ -1030,8 +1041,8 @@ function ChatApp({ user, userProfile, onProfileUpdated }) {
   // Presence
   useEffect(() => {
     const ref = doc(db, "users", user.uid);
-    setDoc(ref, { uid: user.uid, displayName: userProfile.displayName, photoURL: userProfile.photoURL, online: true, lastSeen: serverTimestamp() }, { merge: true });
-    const bye = () => setDoc(ref, { online: false, lastSeen: serverTimestamp() }, { merge: true });
+    setDoc(ref, { uid: user.uid, displayName: userProfile.displayName, photoURL: userProfile.photoURL, online: true, lastOnline: serverTimestamp() }, { merge: true });
+    const bye = () => setDoc(ref, { online: false, lastOnline: serverTimestamp() }, { merge: true });
     window.addEventListener("beforeunload", bye);
     return () => { window.removeEventListener("beforeunload", bye); bye(); };
   }, [user, userProfile]);
@@ -1065,12 +1076,61 @@ function ChatApp({ user, userProfile, onProfileUpdated }) {
   }, [activeChat, user.uid]);
 
   useEffect(() => {
+  if (activeChat?.type === "global") markChatAsRead(user.uid, "global");
+  if (activeChat?.type === "dm") markChatAsRead(user.uid, getDmId(user.uid, activeChat.partner.uid));
+  if (activeChat?.type === "group") markChatAsRead(user.uid, activeChat.group.id);
+  }, [activeChat]);
+
+  useEffect(() => {
     const q = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(1));
     return onSnapshot(q, snap => {
       if (prevChatRef.current?.type !== "global" && snap.docs[0]?.data().uid !== user.uid)
         setGlobalUnread(n => n + 1);
     });
   }, [user.uid]);
+  
+  useEffect(() => {
+  return onSnapshot(doc(db, "users", user.uid), snap => {
+    if (snap.exists()) {
+      setLastSeenMap(snap.data().lastSeen || {});
+      console.log("lastSeenMap loaded:", snap.data().lastSeen);
+    }
+    });
+  }, [user.uid]);
+
+  useEffect(() => {
+  if (!lastSeenMap.global) return;
+  const q = query(
+    collection(db, "messages"),
+    where("createdAt", ">", lastSeenMap.global),
+    where("uid", "!=", user.uid)
+  );
+  return onSnapshot(q, snap => {
+    if (activeChat?.type !== "global") {
+      setGlobalUnread(snap.docs.length);
+    }
+  });
+  }, [lastSeenMap.global, user.uid]);
+
+  useEffect(() => {
+  if (!groups.length) return;
+  const unsubs = groups.map(g => {
+    const chatId = g.id;
+    const lastSeen = lastSeenMap[chatId];
+    if (!lastSeen) return () => {};
+    const q = query(
+      collection(db, "groups", g.id, "messages"),
+      where("createdAt", ">", lastSeen),
+      where("uid", "!=", user.uid)
+    );
+    return onSnapshot(q, snap => {
+      if (activeChat?.type !== "group" || activeChat?.group?.id !== g.id) {
+        setGroupUnreads(prev => ({ ...prev, [g.id]: snap.docs.length }));
+      }
+    });
+  });
+  return () => unsubs.forEach(u => u());
+  }, [lastSeenMap, groups, user.uid]);
 
   const partnerData = activeChat?.type === "dm" ? users.find(u => u.uid === activeChat.partner.uid) : null;
   const groupData = activeChat?.type === "group" ? groups.find(g => g.id === activeChat.group.id) : null;
@@ -1102,6 +1162,7 @@ function ChatApp({ user, userProfile, onProfileUpdated }) {
         onCreateGroup={() => setShowCreateGroup(true)}
         onJoinGroup={() => setShowJoinGroup(true)}
         onOpenProfile={() => setShowProfile(true)}
+        groupUnreads={groupUnreads}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
