@@ -1093,7 +1093,6 @@ function ChatApp({ user, userProfile, onProfileUpdated }) {
   return onSnapshot(doc(db, "users", user.uid), snap => {
     if (snap.exists()) {
       setLastSeenMap(snap.data().lastSeen || {});
-      console.log("lastSeenMap loaded:", snap.data().lastSeen);
     }
     });
   }, [user.uid]);
