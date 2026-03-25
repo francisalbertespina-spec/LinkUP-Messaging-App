@@ -155,7 +155,7 @@ This app is part of a personal portfolio demonstrating full-stack development ac
 
 | Project | Stack | Link |
 |---|---|---|
-| HDJV WMS | Vanilla JS + Google Apps Script | [github.com/francisalbertespina-spec/Waste-log-V5](https://github.com/francisalbertespina-spec/Waste-log-V5) |
+| HDJV WMS | Vanilla JS + Google Apps Script | [github.com/francisalbertespina-spec/Waste-log-sandbox](https://github.com/francisalbertespina-spec/Waste-log-sandbox) |
 | Environmental Dashboard | Power BI + DAX + Excel | [github.com/EMU-HDJV/Environmental-Dashboard](https://github.com/EMU-HDJV/Environmental-Dashboard) |
 | LinkUP | React + Firebase | This repo |
 
@@ -163,7 +163,7 @@ This app is part of a personal portfolio demonstrating full-stack development ac
 
 ## Author
 
-**E. Francis Albert Espina** — Electronics and Communications Engineer transitioning into software development.
+**E. Francis Albert** — Electronics and Communications Engineer transitioning into software development.
 
 - GitHub: [github.com/francisalbertespina-spec](https://github.com/francisalbertespina-spec)
 - Email: efrancisalbert@gmail.com
