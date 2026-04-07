@@ -99,7 +99,7 @@ function UsernameSetup({ user, onComplete }) {
       <div className="relative z-10 w-full max-w-sm">
         <div className="bg-[#0d0f18]/80 backdrop-blur-xl border border-slate-800/60 rounded-3xl p-8 shadow-2xl">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-3xl shadow-lg">🎭</div>
+            <img src="/logo.png?v=2" alt="LinkUp" className="w-16 h-16 rounded-2xl shadow-lg" />
           </div>
           <h1 className="text-2xl font-black text-white text-center mb-1">Pick a username</h1>
           <p className="text-slate-400 text-center text-sm mb-6">This is how others will see you in LinkUp.</p>
@@ -1249,7 +1249,7 @@ function LoginScreen({ onLogin, loading }) {
       <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-teal-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="relative z-10 w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-emerald-500/20 text-4xl">💬</div>
+          <img src="/logo.png?v=2" alt="LinkUp" className="w-20 h-20 rounded-3xl shadow-2xl shadow-emerald-500/20" />
         </div>
         <div className="bg-[#0d0f18]/80 backdrop-blur-xl border border-slate-800/60 rounded-3xl p-8 shadow-2xl">
           <h1 className="text-3xl font-black text-white text-center mb-1 tracking-tight">LinkUp</h1>
