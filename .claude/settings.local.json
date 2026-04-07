@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(dir \"C:\\\\Users\\\\hdec\\\\Documents\\\\Project\\\\LinkUp-app\\\\dist\")"
-    ]
-  }
-}
